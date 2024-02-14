@@ -6,5 +6,4 @@ package: 'Custom'
 dependencies:
   - group
   - groupmedia
-  - group_permissions
   - search_api_solr

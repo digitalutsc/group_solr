@@ -53,49 +53,54 @@ class AccessControl extends ProcessorPluginBase {
         $entity = $item->getOriginalObject()->getValue();
         $operation = "view";
 
-        /** @var \Drupal\group\Plugin\GroupContentEnablerManagerInterface $plugin_manager */
-        $plugin_manager = \Drupal::service('group_relation_type.manager');
+        if (\Drupal::hasService('group_relation_type.manager')) {
+            /** @var \Drupal\group\Plugin\GroupContentEnablerManagerInterface $plugin_manager */
+            $plugin_manager = \Drupal::service('group_relation_type.manager');
 
-        if (!method_exists($entity, "getEntityTypeId"))
-           return;
-        
-        $plugin_ids = $plugin_manager->getPluginIdsByEntityTypeAccess($entity->getEntityTypeId());
+            if (!method_exists($entity, "getEntityTypeId"))
+            return;
+            
+            $plugin_ids = $plugin_manager->getPluginIdsByEntityTypeAccess($entity->getEntityTypeId());
 
-        $plugin_cache_tags = [];
-        foreach ($plugin_ids as $plugin_id) {
-            $plugin_cache_tags[] = "group_content_list:plugin:$plugin_id";
-        }
-
-        // Load all of the group content for this entity.
-        $group_contents = GroupRelationship::loadByEntity($entity);
-        if (!empty($group_contents) && count($group_contents) > 0) {
-            $access = AccessResult::neutral();
+            $plugin_cache_tags = [];
             foreach ($plugin_ids as $plugin_id) {
-                /*if (!$plugin_manager->hasHandler($plugin_id, 'access')) {
-                    continue;
-                }*/
-
-                $handler = $plugin_manager->getAccessControlHandler($plugin_id);
-                $access = $access->orIf($handler->entityAccess($entity, $operation, User::getAnonymousUser(), TRUE));
+                $plugin_cache_tags[] = "group_content_list:plugin:$plugin_id";
             }
 
-            $access
-                ->addCacheTags($plugin_cache_tags)
-                ->addCacheContexts(['user.group_permissions']);
+            // Load all of the group content for this entity.
+            $group_contents = GroupRelationship::loadByEntity($entity);
+            if (!empty($group_contents) && count($group_contents) > 0) {
+                $access = AccessResult::neutral();
+                foreach ($plugin_ids as $plugin_id) {
+                    /*if (!$plugin_manager->hasHandler($plugin_id, 'access')) {
+                        continue;
+                    }*/
 
-            if ($access->isAllowed()) {
+                    $handler = $plugin_manager->getAccessControlHandler($plugin_id);
+                    $access = $access->orIf($handler->entityAccess($entity, $operation, User::getAnonymousUser(), TRUE));
+                }
+
+                $access
+                    ->addCacheTags($plugin_cache_tags)
+                    ->addCacheContexts(['user.group_permissions']);
+
+                if ($access->isAllowed()) {
+                    $value = "200";
+                }
+                else {
+                    $groups = Utilities::getGroupsByNode($entity->id());
+                    sort($groups);
+                    $value = implode(",", $groups);
+                }
+
+
+            }else {
                 $value = "200";
             }
-            else {
-                $groups = Utilities::getGroupsByNode($entity->id());
-                sort($groups);
-                $value = implode(",", $groups);
-            }
-
-
-        }else {
+        } else {
             $value = "200";
         }
+        
         // index field
         $fields = $item->getFields(FALSE);
         $fields = $this->getFieldsHelper()

@@ -1,9 +1,7 @@
 name: 'Search API Solr Access Control With Groups'
 type: module
 description: 'This module add Solr indexed field(s) which is determined access control with Group module for an indexed item to be public or private for annonymous users'
-core_version_requirement: ^8.8 || ^9 || ^10
+core_version_requirement: ^8.8 || ^9 || ^10 || ^11
 package: 'Custom'
 dependencies:
-  - group
-  - groupmedia
   - search_api_solr

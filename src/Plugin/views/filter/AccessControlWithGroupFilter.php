@@ -2,11 +2,9 @@
 
 namespace Drupal\group_solr\Plugin\views\filter;
 
+use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\views\Plugin\views\filter\StringFilter;
-use Drupal\views\Plugin\views\filter\BooleanOperator;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
-use Drupal\views\Plugin\views\filter\InOperator;
 use Drupal\views\Plugin\views\filter\Standard;
 use Drupal\views\ViewExecutable;
 
@@ -17,28 +15,28 @@ use Drupal\views\ViewExecutable;
  *
  * @ViewsFilter("access_control_with_group_filter")
  */
-class AccessControlWithGroupFilter extends Standard{
+class AccessControlWithGroupFilter extends Standard {
 
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  // phpcs:ignore -- Possible useless method overriding detected
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
   }
 
   /**
-   * Override the query so that no filtering takes place if the user doesn't
-   * select any options.
+   * Override the query to prevent filtering when no options are selected.
    */
   public function query() {
     $query = $this->query;
 
-    // Get current user
+    // Get current user.
     $uid = \Drupal::currentUser()->id();
-    $current_user = \Drupal\user\Entity\User::load($uid);
+    $current_user = User::load($uid);
 
-    // Get groups which this user is belonged to
-    $groups = array();
+    // Get groups which this user is belonged to.
+    $groups = [];
     $grp_membership_service = \Drupal::service('group.membership_loader');
     $grps = $grp_membership_service->loadByUser($current_user);
     foreach ($grps as $grp) {
@@ -63,12 +61,16 @@ class AccessControlWithGroupFilter extends Standard{
     }
   }
 
+  /**
+   * Builds the options form.
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     $form["filter-descritpion"] = [
       "#markup" => $this->t("Adding this fitler, it will check current user 
-      with the existing access control with Groups and filter the results.")
+      with the existing access control with Groups and filter the results."),
     ];
     unset($form['expose_button']);
   }
+
 }

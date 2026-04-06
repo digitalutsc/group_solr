@@ -15,26 +15,27 @@ use Drupal\Component\Render\FormattableMarkup;
  */
 class AddAccessControlProperty extends ConfigurablePropertyBase {
 
-    use StringTranslationTrait;
+  use StringTranslationTrait;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function defaultConfiguration() {
-        return [
-            'absolute' => FALSE,
-        ];
-    }
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return [
+      'absolute' => FALSE,
+    ];
+  }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function buildConfigurationForm(FieldInterface $field, array $form, FormStateInterface $form_state) {
-        $configuration = $field->getConfiguration();
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(FieldInterface $field, array $form, FormStateInterface $form_state) {
+    // phpcs:ignore -- Unused variable $configuration.
+    $configuration = $field->getConfiguration();
 
-        $form['description'] = [
-            '#markup' => new FormattableMarkup(
-                "<p>This field is determined access control with 
+    $form['description'] = [
+      '#markup' => new FormattableMarkup(
+              "<p>This field is determined access control with 
                     <a href='https://www.drupal.org/project/group' target='_blank'>Group</a> 
                     for an indexed item to be public or private for annonymous users</p>
                 <p>Field's values to be indexed to Solr: </p>
@@ -44,10 +45,10 @@ class AddAccessControlProperty extends ConfigurablePropertyBase {
                     
                 </ul>
                 ",
-                []),
-        ];
+              []),
+    ];
 
-        return $form;
-    }
+    return $form;
+  }
 
 }

@@ -23,7 +23,7 @@ class LoadTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
-  
+
   /**
    * A user with permission to administer site configuration.
    *

@@ -20,6 +20,11 @@ class LoadTest extends BrowserTestBase {
   public static $modules = ['group_solr'];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * A user with permission to administer site configuration.
    *
    * @var \Drupal\user\UserInterface
@@ -29,7 +34,7 @@ class LoadTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->user = $this->drupalCreateUser(['administer site configuration']);
     $this->drupalLogin($this->user);

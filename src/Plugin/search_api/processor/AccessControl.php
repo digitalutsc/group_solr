@@ -1,6 +1,6 @@
 <?php
 
-namespace  Drupal\group_solr\Plugin\search_api\processor;
+namespace Drupal\group_solr\Plugin\search_api\processor;
 
 use Drupal\islandora_group\Utilities;
 use Drupal\group\Entity\GroupRelationship;
@@ -10,7 +10,6 @@ use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\group_solr\Plugin\search_api\processor\Property\AddAccessControlProperty;
 use Drupal\Core\Access\AccessResult;
 use Drupal\user\Entity\User;
-
 
 /**
  * Adds the item's URL to the indexed data.
@@ -27,87 +26,91 @@ use Drupal\user\Entity\User;
  * )
  */
 class AccessControl extends ProcessorPluginBase {
-    /**
-     * {@inheritdoc}
-     */
-    public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
-        $properties = [];
 
-        if (!$datasource) {
-            $definition = [
-                'label' => $this->t(' Group: Access Control'),
-                'description' => $this->t('Add a field to determine access control with Group'),
-                'type' => 'string',
-                'processor_id' => $this->getPluginId(),
-            ];
-            $properties['search_api_group_access_control'] = new AddAccessControlProperty($definition);
-        }
+  /**
+   * {@inheritdoc}
+   */
+  public function getPropertyDefinitions(?DatasourceInterface $datasource = NULL) {
+    $properties = [];
 
-        return $properties;
+    if (!$datasource) {
+      $definition = [
+        // phpcs:ignore -- Translatable strings must not begin or end with white spaces, use placeholders with t() for variables
+        'label' => $this->t(' Group: Access Control'),
+        'description' => $this->t('Add a field to determine access control with Group'),
+        'type' => 'string',
+        'processor_id' => $this->getPluginId(),
+      ];
+      $properties['search_api_group_access_control'] = new AddAccessControlProperty($definition);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addFieldValues(ItemInterface $item) {
-        $entity = $item->getOriginalObject()->getValue();
-        $operation = "view";
+    return $properties;
+  }
 
-        if (\Drupal::hasService('group_relation_type.manager')) {
-            /** @var \Drupal\group\Plugin\GroupContentEnablerManagerInterface $plugin_manager */
-            $plugin_manager = \Drupal::service('group_relation_type.manager');
+  /**
+   * {@inheritdoc}
+   */
+  public function addFieldValues(ItemInterface $item) {
+    $entity = $item->getOriginalObject()->getValue();
+    $operation = "view";
 
-            if (!method_exists($entity, "getEntityTypeId"))
-            return;
-            
-            $plugin_ids = $plugin_manager->getPluginIdsByEntityTypeAccess($entity->getEntityTypeId());
+    if (\Drupal::hasService('group_relation_type.manager')) {
+      /** @var \Drupal\group\Plugin\GroupContentEnablerManagerInterface $plugin_manager */
+      $plugin_manager = \Drupal::service('group_relation_type.manager');
 
-            $plugin_cache_tags = [];
-            foreach ($plugin_ids as $plugin_id) {
-                $plugin_cache_tags[] = "group_content_list:plugin:$plugin_id";
-            }
+      if (!method_exists($entity, "getEntityTypeId")) {
+        return;
+      }
 
-            // Load all of the group content for this entity.
-            $group_contents = GroupRelationship::loadByEntity($entity);
-            if (!empty($group_contents) && count($group_contents) > 0) {
-                $access = AccessResult::neutral();
-                foreach ($plugin_ids as $plugin_id) {
-                    /*if (!$plugin_manager->hasHandler($plugin_id, 'access')) {
-                        continue;
-                    }*/
+      $plugin_ids = $plugin_manager->getPluginIdsByEntityTypeAccess($entity->getEntityTypeId());
 
-                    $handler = $plugin_manager->getAccessControlHandler($plugin_id);
-                    $access = $access->orIf($handler->entityAccess($entity, $operation, User::getAnonymousUser(), TRUE));
-                }
+      $plugin_cache_tags = [];
+      foreach ($plugin_ids as $plugin_id) {
+        $plugin_cache_tags[] = "group_content_list:plugin:$plugin_id";
+      }
 
-                $access
-                    ->addCacheTags($plugin_cache_tags)
-                    ->addCacheContexts(['user.group_permissions']);
+      // Load all of the group content for this entity.
+      $group_contents = GroupRelationship::loadByEntity($entity);
+      if (!empty($group_contents) && count($group_contents) > 0) {
+        $access = AccessResult::neutral();
+        foreach ($plugin_ids as $plugin_id) {
+          /*if (!$plugin_manager->hasHandler($plugin_id, 'access')) {
+          continue;
+          }*/
 
-                if ($access->isAllowed()) {
-                    $value = "200";
-                }
-                else {
-                    $groups = Utilities::getGroupsByNode($entity->id());
-                    sort($groups);
-                    $value = implode(",", $groups);
-                }
-
-
-            }else {
-                $value = "200";
-            }
-        } else {
-            $value = "200";
+          $handler = $plugin_manager->getAccessControlHandler($plugin_id);
+          $access = $access->orIf($handler->entityAccess($entity, $operation, User::getAnonymousUser(), TRUE));
         }
-        
-        // index field
-        $fields = $item->getFields(FALSE);
-        $fields = $this->getFieldsHelper()
-            ->filterForPropertyPath($fields, NULL, 'search_api_group_access_control');
-        foreach ($fields as $field) {
-            $field->addValue($value);
+
+        $access
+          ->addCacheTags($plugin_cache_tags)
+          ->addCacheContexts(['user.group_permissions']);
+
+        if ($access->isAllowed()) {
+          $value = "200";
         }
+        else {
+          $groups = Utilities::getGroupsByNode($entity->id());
+          sort($groups);
+          $value = implode(",", $groups);
+        }
+
+      }
+      else {
+        $value = "200";
+      }
     }
+    else {
+      $value = "200";
+    }
+
+    // Index field.
+    $fields = $item->getFields(FALSE);
+    $fields = $this->getFieldsHelper()
+      ->filterForPropertyPath($fields, NULL, 'search_api_group_access_control');
+    foreach ($fields as $field) {
+      $field->addValue($value);
+    }
+  }
 
 }

@@ -35,8 +35,7 @@ class AccessControl extends ProcessorPluginBase {
 
     if (!$datasource) {
       $definition = [
-        // phpcs:ignore -- Translatable strings must not begin or end with white spaces, use placeholders with t() for variables
-        'label' => $this->t(' Group: Access Control'),
+        'label' => $this->t('Group: Access Control'),
         'description' => $this->t('Add a field to determine access control with Group'),
         'type' => 'string',
         'processor_id' => $this->getPluginId(),

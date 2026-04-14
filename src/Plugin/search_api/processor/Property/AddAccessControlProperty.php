@@ -30,9 +30,6 @@ class AddAccessControlProperty extends ConfigurablePropertyBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(FieldInterface $field, array $form, FormStateInterface $form_state) {
-    // phpcs:ignore -- Unused variable $configuration.
-    $configuration = $field->getConfiguration();
-
     $form['description'] = [
       '#markup' => new FormattableMarkup(
               "<p>This field is determined access control with 
